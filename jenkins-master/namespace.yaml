@@ -1,0 +1,10 @@
+# Step 1: Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: devops-tools
+  name: devops-tools
+spec:
+  finalizers:
+    - kubernetes
