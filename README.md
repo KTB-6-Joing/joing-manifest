@@ -10,3 +10,5 @@
 ## manifest 설치 목록
 
 - [jenkins](https://www.jenkins.io/doc/book/installing/kubernetes)
+- [cluster-autoscaler](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/autoscaling.html)
+  - jenkins agent spot instance 활용

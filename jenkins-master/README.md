@@ -1,0 +1,8 @@
+- Jenkins Master
+  - Kubernetes Pod
+    - ns: devops-tools
+- Jenkins Agent
+  - EKS Spot NodeGroup
+    - 장점: 비용 절감, 별도의 ASG 설정 없이 nodeAffinity로 인스턴스 생성 (jenkins = true)
+    - 단점: 시간 소요
+      - 팀 프로젝트로써 급한 릴리즈가 없을 것으로 예상
