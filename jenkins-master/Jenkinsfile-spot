@@ -1,0 +1,33 @@
+// kubernetes spot agent example file 
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  nodeSelector:
+    jenkins: "true"
+  containers:
+  - name: shell
+    image: ubuntu:latest
+    command:
+    - sleep
+    args:
+    - infinity
+    securityContext:
+      runAsUser: 1000
+'''
+            defaultContainer 'shell'
+            retries 2
+        }
+    }
+    stages {
+        stage('Test') {
+            steps {
+                sh 'hostname'
+                echo 'hello world'
+            }
+        }
+    }
+}
