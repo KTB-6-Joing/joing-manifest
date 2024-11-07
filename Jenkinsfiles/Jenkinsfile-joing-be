@@ -1,0 +1,113 @@
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+  name: build-env
+spec:
+  nodeSelector:
+    jenkins: "true"
+  containers:
+  - name: shell
+    image: ubuntu:latest
+    command:
+    - sleep
+    args:
+    - infinity
+    securityContext:
+      runAsUser: 1000
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - sleep
+    args:
+    - infinity
+    volumeMounts:
+    - name: registry-credentials
+      mountPath: /kaniko/.docker
+  volumes:
+    - name: registry-credentials
+      secret:
+        secretName: ecr-secret
+        items: 
+        - key: .dockerconfigjson
+          path: config.json
+'''
+            defaultContainer 'shell'
+            retries 2
+        }
+    }
+    
+    environment {
+        GITHUB_REPO = 'KTB-6-Joing/joing-server'
+        BRANCH = 'develop'
+        ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
+        ECR_REGISTRY = 'joing-rec-ai-repo'
+        
+        DISCORD_WEBHOOK = credentials('discord-webhook-url')
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                // git branch: "${BRANCH}", url: "https://github.com/${GITHUB_REPO}.git"
+            }
+        }
+        stage('Build Image') {
+            steps {
+                withCredentials([
+                    string(credentialsId: 'ssm_access_key_id', variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'ssm_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
+                    container('kaniko') {
+                        sh 'mkdir -p /workspace && cp -r * /workspace/'
+                        sh """
+                        executor --dockerfile=Dockerfile \
+                        --context=dir:///workspace \
+                        --destination=${ECR_REPO}/${ECR_REGISTRY}:v0.0.${env.BUILD_NUMBER} \
+                        --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+                        --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+                        """
+                    }
+                }
+            }
+        }
+    }
+    
+ /*
+    post {
+        success {
+            discordSend description: """
+                빌드 성공!
+                **Branch**: ${env.BRANCH ?: 'develop'}
+                **Build Number**: ${env.BUILD_NUMBER}
+                **Commit**: ${env.GIT_COMMIT_MSG}
+                """, 
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult, 
+                title: JOB_NAME,
+                footer: "Jenkins Build Notification",
+                webhookURL: "${DISCORD_WEBHOOK}"
+        }
+        
+        failure {
+            discordSend description: """
+                빌드 실패...
+                Branch: ${env.BRANCH ?: 'default'}
+                Build Number: ${env.BUILD_NUMBER}
+                """, 
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult, 
+                title: JOB_NAME,
+                footer: "Jenkins Build Notification",
+                webhookURL: "${DISCORD_WEBHOOK}"
+        }
+        
+        always {
+            cleanWs()
+        }
+    }
+    */  
+}
