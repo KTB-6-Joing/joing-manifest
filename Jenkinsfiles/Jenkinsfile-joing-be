@@ -42,9 +42,9 @@ spec:
     
     environment {
         GITHUB_REPO = 'KTB-6-Joing/joing-server'
-        BRANCH = 'develop'
+        BRANCH = 'main'
         ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
-        ECR_REGISTRY = 'joing-rec-ai-repo'
+        ECR_REGISTRY = 'joing-backend-repo'
         
         DISCORD_WEBHOOK = credentials('discord-webhook-url')
     }
@@ -52,42 +52,35 @@ spec:
     stages {
         stage('Checkout') {
             steps {
-                // git branch: "${BRANCH}", url: "https://github.com/${GITHUB_REPO}.git"
+                git branch: "${BRANCH}", url: "https://github.com/${GITHUB_REPO}.git"
             }
         }
+        
         stage('Build Image') {
             steps {
-                withCredentials([
-                    string(credentialsId: 'ssm_access_key_id', variable: 'AWS_ACCESS_KEY_ID'),
-                    string(credentialsId: 'ssm_secret_key', variable: 'AWS_SECRET_ACCESS_KEY')
-                ]) {
-                    container('kaniko') {
-                        sh 'mkdir -p /workspace && cp -r * /workspace/'
-                        sh """
-                        executor --dockerfile=Dockerfile \
-                        --context=dir:///workspace \
-                        --destination=${ECR_REPO}/${ECR_REGISTRY}:v0.0.${env.BUILD_NUMBER} \
-                        --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
-                        --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-                        """
-                    }
+                container('kaniko') {
+                    sh 'mkdir -p /workspace && cp -r * /workspace/'
+                    sh """
+                    executor --dockerfile=Dockerfile \
+                    --context=dir:///workspace \
+                    --destination=${ECR_REPO}/${ECR_REGISTRY}:v0.0.${env.BUILD_NUMBER}
+                    """
                 }
             }
         }
     }
     
- /*
+
     post {
         success {
             discordSend description: """
                 빌드 성공!
                 **Branch**: ${env.BRANCH ?: 'develop'}
                 **Build Number**: ${env.BUILD_NUMBER}
-                **Commit**: ${env.GIT_COMMIT_MSG}
                 """, 
                 link: env.BUILD_URL,
                 result: currentBuild.currentResult, 
-                title: JOB_NAME,
+                title: env.JOB_NAME,
                 footer: "Jenkins Build Notification",
                 webhookURL: "${DISCORD_WEBHOOK}"
         }
@@ -100,7 +93,7 @@ spec:
                 """, 
                 link: env.BUILD_URL,
                 result: currentBuild.currentResult, 
-                title: JOB_NAME,
+                title: env.JOB_NAME,
                 footer: "Jenkins Build Notification",
                 webhookURL: "${DISCORD_WEBHOOK}"
         }
@@ -109,5 +102,5 @@ spec:
             cleanWs()
         }
     }
-    */  
+
 }
