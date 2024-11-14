@@ -21,7 +21,7 @@ spec:
         app: ai
     spec:
       containers:
-        - image: 054037113048.dkr.ecr.ap-northeast-2.amazonaws.com/joing-ai-repo:v0.1.x
+        - image: 054037113048.dkr.ecr.ap-northeast-2.amazonaws.com/joing-ai-repo:v0.1.33
           name: joing-ai-repo
           resources:
             requests:
