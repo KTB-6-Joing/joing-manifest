@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ai
+  name: ai
+  namespace: prod
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: ai
+  template:
+    metadata:
+      labels:
+        app: ai
+    spec:
+      containers:
+        - image: 054037113048.dkr.ecr.ap-northeast-2.amazonaws.com/joing-ai-repo:v0.1.33
+          name: joing-ai-repo
+          resources:
+            requests:
+              cpu: 200m
+              memory: 250Mi
+            limits:
+              cpu: 500m
+          ports:
+            - containerPort: 8000
+              name: app
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            failureThreshold: 1
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          volumeMounts:
+            - name: aws-config
+              mountPath: /root/.aws/config
+              subPath: config
+            - name: aws-credentials
+              mountPath: /root/.aws/credentials
+              subPath: credentials
+      volumes:
+        - name: aws-config
+          secret:
+            secretName: aws-config
+        - name: aws-credentials
+          secret:
+            secretName: aws-credentials
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ai
+  name: ai-svc
+  namespace: prod
+spec:
+  ports:
+    - protocol: TCP
+      name: http
+      port: 80
+      targetPort: 8000
+    - protocol: TCP
+      name: https
+      port: 443
+      targetPort: 8000
+  selector:
+    app: ai
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-ingress
+  namespace: prod
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: instance
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+spec:
+  ingressClassName: alb
+  rules:
+    - host: joing-ai.o-r.kr
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-svc
+                port:
+                  name: https
