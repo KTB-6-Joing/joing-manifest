@@ -52,7 +52,16 @@ spec:
     stages {
         stage('Checkout') {
             steps {
-                git branch: "${BRANCH}", url: "https://github.com/${GITHUB_REPO}.git"
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${BRANCH}"]],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        url: "https://github.com/${GITHUB_REPO}.git"
+                    ]]
+                ])
             }
         }
         
@@ -70,17 +79,18 @@ spec:
         }
     }
     
-
     post {
         success {
             discordSend description: """
                 빌드 성공!
+                **REPO**: ${env.GITHUB_REPO}
                 **Branch**: ${env.BRANCH ?: 'develop'}
                 **Build Number**: ${env.BUILD_NUMBER}
+                **Image Tag**: v0.0.${env.BUILD_NUMBER}
                 """, 
                 link: env.BUILD_URL,
                 result: currentBuild.currentResult, 
-                title: env.JOB_NAME,
+                title: JOB_NAME,
                 footer: "Jenkins Build Notification",
                 webhookURL: "${DISCORD_WEBHOOK}"
         }
@@ -88,12 +98,13 @@ spec:
         failure {
             discordSend description: """
                 빌드 실패...
-                Branch: ${env.BRANCH ?: 'default'}
-                Build Number: ${env.BUILD_NUMBER}
+                **REPO**: ${env.GITHUB_REPO}
+                **Branch**: ${env.BRANCH ?: 'default'}
+                **Build Number**: ${env.BUILD_NUMBER}
                 """, 
                 link: env.BUILD_URL,
                 result: currentBuild.currentResult, 
-                title: env.JOB_NAME,
+                title: JOB_NAME,
                 footer: "Jenkins Build Notification",
                 webhookURL: "${DISCORD_WEBHOOK}"
         }
@@ -102,5 +113,4 @@ spec:
             cleanWs()
         }
     }
-
 }
