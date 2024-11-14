@@ -29,6 +29,7 @@ spec:
               memory: 250Mi
             limits:
               cpu: 500m
+              memory: 1Gi
           ports:
             - containerPort: 8080
               name: app
@@ -58,6 +59,32 @@ spec:
         - name: aws-credentials
           secret:
             secretName: aws-credentials
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend
+  namespace: prod
+spec:
+  maxReplicas: 2
+  metrics:
+    - resource:
+        name: cpu
+        target:
+          averageUtilization: 80
+          type: Utilization
+      type: Resource
+    - resource:
+        name: memory
+        target:
+          averageUtilization: 80
+          type: Utilization
+      type: Resource
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
 ---
 apiVersion: v1
 kind: Service

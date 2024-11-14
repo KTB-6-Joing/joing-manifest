@@ -18,6 +18,10 @@ spec:
       containers:
         - name: kibana
           image: elastic/kibana:7.17.23
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "500m"
           env:
             - name: ELASTICSEARCH_HOSTS
               value: "http://elasticsearch-svc:9200"
