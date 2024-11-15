@@ -2,3 +2,5 @@ kubeconfig.yaml
 .json
 .aws
 password.txt
+config
+credentials
