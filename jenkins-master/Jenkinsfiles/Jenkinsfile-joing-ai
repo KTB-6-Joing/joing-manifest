@@ -1,3 +1,5 @@
+def BUILD_TIMEOUT = 30
+
 pipeline {
     agent {
         kubernetes {
@@ -24,6 +26,13 @@ spec:
     - sleep
     args:
     - infinity
+    resources:
+      limits:
+        memory: 3Gi
+        cpu: 2
+      requests:
+        memory: 2Gi
+        cpu: 1
     volumeMounts:
     - name: registry-credentials
       mountPath: /kaniko/.docker
@@ -48,7 +57,7 @@ spec:
         ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
         ECR_REGISTRY = 'joing-ai-repo'
         CONTAINER_PORT = '8000'
-        IMAGE_TAG = "v0.1.${env.BUILD_NUMBER}"
+        IMAGE_TAG = "v0.0.1"
         
         DISCORD_WEBHOOK = credentials('discord-webhook-url')
     }
@@ -67,10 +76,10 @@ spec:
             regexpFilterExpression: '^refs/heads/build/TestBranch$'
         )
     }
-    /*
-    triggers {
-        githubPush()
-    }*/
+    
+    options {
+        timeout(time: BUILD_TIMEOUT, unit: 'MINUTES')
+    }
     
     stages {
         stage('Checkout') {
@@ -97,13 +106,14 @@ spec:
                     --context=/workspace \
                     --build-arg PORT=${CONTAINER_PORT} \
                     --destination=${ECR_REPO}/${ECR_REGISTRY}:${env.IMAGE_TAG} \
-                    --cleanup
+                    --single-snapshot \
+                    --compressed-caching=false \
+                    --cleanup 
                     """
                 }
             }
         }
     }
-    
     
     post {
         success {
@@ -111,7 +121,7 @@ spec:
                 빌드 성공!
                 **Branch**: ${env.BRANCH ?: 'develop'}
                 **Build Number**: ${env.BUILD_NUMBER}
-                **Image**: ${ECR_REPO}/${ECR_REGISTRY}:${IMAGE_TAG}
+                **Image Tag**: ${IMAGE_TAG}
                 """, 
                 link: env.BUILD_URL,
                 result: currentBuild.currentResult, 

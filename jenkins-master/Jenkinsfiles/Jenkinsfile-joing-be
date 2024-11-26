@@ -42,11 +42,26 @@ spec:
     
     environment {
         GITHUB_REPO = 'KTB-6-Joing/joing-server'
-        BRANCH = 'main'
+        BRANCH = 'develop'
         ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
         ECR_REGISTRY = 'joing-backend-repo'
         
         DISCORD_WEBHOOK = credentials('discord-webhook-url')
+    }
+    
+    triggers {
+        GenericTrigger(
+            genericVariables: [
+                [key: 'ref', value: '$.ref']
+            ],
+            causeString: 'develop branch github push',
+            token: 'joing-generic-webhook-token',
+            printContributedVariables: true, // debugging
+            printPostContent: true, // debugging
+            silentResponse: false, // webhook detail info
+            regexpFilterText: '$ref',
+            regexpFilterExpression: '^refs/heads/develop$'
+        )
     }
     
     stages {

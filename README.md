@@ -11,6 +11,8 @@
   - helm install prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring
 - [argocd](https://artifacthub.io/packages/helm/argo/argo-cd)
   - helm install argo-cd argo/argo-cd --version 7.7.1 -n argocd
+  - 대상 그룹 헬스체크 HTTPS -> HTTP 로드밸런서로 ELB 설정
+  - [argocd-image-updater](https://argocd-image-updater.readthedocs.io/en/stable/install/installation/#method-1-installing-as-kubernetes-workload-in-argo-cd-namespace) 추가 설치
 
 ## manifest 설치 목록
 

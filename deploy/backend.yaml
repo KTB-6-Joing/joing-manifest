@@ -21,12 +21,12 @@ spec:
         app: backend
     spec:
       containers:
-        - image: 054037113048.dkr.ecr.ap-northeast-2.amazonaws.com/joing-backend-repo:v0.0.9
+        - image: 054037113048.dkr.ecr.ap-northeast-2.amazonaws.com/joing-backend-repo:v0.0.24
           name: joing-backend-repo
           resources:
             requests:
-              cpu: 200m
-              memory: 250Mi
+              cpu: 250m
+              memory: 512Mi
             limits:
               cpu: 500m
               memory: 1Gi
@@ -38,13 +38,13 @@ spec:
               path: /healthz
               port: 8080
             failureThreshold: 1
-            periodSeconds: 30
+            periodSeconds: 120
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
+            initialDelaySeconds: 120
+            periodSeconds: 60
           volumeMounts:
             - name: aws-config
               mountPath: /root/.aws/config
@@ -67,6 +67,7 @@ metadata:
   namespace: prod
 spec:
   maxReplicas: 2
+  minReplicas: 2
   metrics:
     - resource:
         name: cpu
@@ -80,7 +81,6 @@ spec:
           averageUtilization: 80
           type: Utilization
       type: Resource
-  minReplicas: 2
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
@@ -117,6 +117,11 @@ metadata:
     alb.ingress.kubernetes.io/target-type: instance
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
     alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    alb.ingress.kubernetes.io/healthcheck-path: "/healthz"
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: 60
+
 spec:
   ingressClassName: alb
   rules:
