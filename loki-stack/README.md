@@ -7,5 +7,10 @@
 
 - 로그 수집에 필요한 리소스만 활용 가능 (검색 불필요)
 - GUI (Kibana) Grafana 활용으로 리소스 최적화 가능
-- Loki와 호환성이 높은 Promtail 활용
-- 추후 리소스 사용량 최적화를 위해 FluentBit 활용 예정
+- Loki와 호환성이 높은 Promtail도 고려했지만 리소스 최적화가 목표이므로 FluentBit 활용 예정
+
+### loki-stack
+
+- loki와 promtail, fluentbit, filebeat부터 grafana까지 연동이 가능한 helm chart
+- 기존 grafana 활용으로 loki와 fluentbit만 설정
+- elasticserarch - 1.3Gi 이상 -> loki-stack - 100Mi 이하

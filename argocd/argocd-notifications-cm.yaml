@@ -31,7 +31,7 @@ data:
             "embeds": [
               {
                 "title:": "ArgoCD Status Notification - {{ .app.metadata.name }}",
-                "description": "### Status: {{ .app.status.operationState.phase }}\n **{{ .app.metadata.name }}** ",
+                "description": "### Status: {{ .app.status.operationState.phase }}\n {{ .app.status.sync.revision }}\n [{{ .app.metadata.name }}](https://argocd.o-r.kr/applications/argocd/{{ .app.metadata.name }})",
                 "color": "{{ if eq .app.status.operationState.phase "Running" }} 1127128 {{end}} {{ if eq .app.status.operationState.phase "Succeeded" }} 3066993 {{end}} {{ if eq .app.status.operationState.phase "Error" }} 15158332 {{end}} {{ if eq .app.status.operationState.phase "Failed" }} 15158332 {{end}}"
               }
             ]
@@ -44,17 +44,29 @@ data:
           {
             "embeds": [
               {
-                "title:": "ArgoCD Notification - {{ .app.metadata.name }}",
-                "description": "### Sync: {{ .app.status.sync.status }}\n **{{ .app.metadata.name }}**",
+                "title:": "ArgoCD Sync Notification - {{ .app.metadata.name }}",
+                "description": "### Sync: {{ .app.status.sync.status }}\n {{ .app.status.sync.revision }}\n [{{ .app.metadata.name }}](https://argocd.o-r.kr/applications/argocd/{{ .app.metadata.name }})",
                 "color": "{{ if eq .app.status.sync.status "Synced" }} 3066993 {{end}} {{ if eq .app.status.sync.status "OutOfSync" }} 15158332 {{end}}"
               }
             ]
           }
   trigger.sync-operation-change: |
-    - when: app.status.operationState.phase in ['Succeeded', 'Running', 'Error', 'Failed']
+    - when: app.status.operationState.phase in ['Succeeded']
       send: [discord-status]
-      oncePer: false
+      oncePer: app.status.operationState.syncResult.revision
+    - when: app.status.operationState.phase in ['Running']
+      send: [discord-status]
+      oncePer: app.status.operationState.syncResult.revision
+    - when: app.status.operationState.phase in ['Error']
+      send: [discord-status]
+      oncePer: app.status.operationState.syncResult.revision
+    - when: app.status.operationState.phase in ['Failed']
+      send: [discord-status]
+      oncePer: app.status.operationState.syncResult.revision
   trigger.sync-status-change: |
-    - when: app.status.sync.status in ['Synced', 'OutOfSync']
+    - when: app.status.sync.status in ['Synced']
       send: [discord-sync]
-      oncePer: false
+      oncePer: app.status.operationState.syncResult.revision
+    - when: app.status.sync.status in ['OutOfSync']
+      send: [discord-sync]
+      oncePer: app.status.operationState.syncResult.revision
