@@ -31,7 +31,7 @@ data:
             "embeds": [
               {
                 "title:": "ArgoCD Status Notification - {{ .app.metadata.name }}",
-                "description": "# Status [ **{{ .app.metadata.name }}** ]  |  **{{ .app.status.operationState.phase }}**",
+                "description": "### Status: {{ .app.status.operationState.phase }}\n **{{ .app.metadata.name }}** ",
                 "color": "{{ if eq .app.status.operationState.phase "Running" }} 1127128 {{end}} {{ if eq .app.status.operationState.phase "Succeeded" }} 3066993 {{end}} {{ if eq .app.status.operationState.phase "Error" }} 15158332 {{end}} {{ if eq .app.status.operationState.phase "Failed" }} 15158332 {{end}}"
               }
             ]
@@ -45,7 +45,7 @@ data:
             "embeds": [
               {
                 "title:": "ArgoCD Notification - {{ .app.metadata.name }}",
-                "description": "# Sync [ **{{ .app.metadata.name }}** ] |  **{{ .app.status.sync.status }}**",
+                "description": "### Sync: {{ .app.status.sync.status }}\n **{{ .app.metadata.name }}**",
                 "color": "{{ if eq .app.status.sync.status "Synced" }} 3066993 {{end}} {{ if eq .app.status.sync.status "OutOfSync" }} 15158332 {{end}}"
               }
             ]
@@ -53,6 +53,8 @@ data:
   trigger.sync-operation-change: |
     - when: app.status.operationState.phase in ['Succeeded', 'Running', 'Error', 'Failed']
       send: [discord-status]
+      oncePer: false
   trigger.sync-status-change: |
     - when: app.status.sync.status in ['Synced', 'OutOfSync']
       send: [discord-sync]
+      oncePer: false
