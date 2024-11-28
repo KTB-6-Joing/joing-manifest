@@ -4,3 +4,4 @@ kubeconfig.yaml
 password.txt
 config
 credentials
+*.yaml
