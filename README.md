@@ -22,8 +22,10 @@
 ## manifest 설치 목록
 
 - [jenkins](https://www.jenkins.io/doc/book/installing/kubernetes)
-- [cluster-autoscaler](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/autoscaling.html)
   - jenkins agent spot instance 활용
     - stateless
     - 비용 절감
     - Kaniko 활용으로 DinD, Docker 종속 문제 해결
+- [cluster-autoscaler](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/autoscaling.html)
+  - [Migrating from Cluster Autoscaler](https://karpenter.sh/docs/getting-started/migrating-from-cas/#remove-cas)
+    - 리소스 과사용으로 보류
