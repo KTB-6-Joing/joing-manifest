@@ -5,7 +5,7 @@ metadata:
   name: redis-config
 data:
   redis-config: |
-    maxmemory 20mb
+    maxmemory 270mb
     maxmemory-policy allkeys-lru
 ---
 apiVersion: v1
@@ -32,6 +32,8 @@ metadata:
   labels:
     app: redis
 spec:
+  nodeSelector:
+    node-type: ondemand
   containers:
     - name: redis
       image: redis:latest
@@ -41,6 +43,13 @@ spec:
       env:
         - name: MASTER
           value: "true"
+      resources:
+        requests:
+          cpu: 32m
+          memory: 128Mi
+        limits:
+          cpu: 64m
+          memory: 256Mi
       ports:
         - containerPort: 6379
           name: redis
@@ -49,6 +58,18 @@ spec:
           name: data
         - mountPath: /redis-master
           name: config
+      readinessProbe:
+        tcpSocket:
+          port: redis
+        initialDelaySeconds: 20
+        timeoutSeconds: 5
+        periodSeconds: 3
+      livenessProbe:
+        tcpSocket:
+          port: redis
+        initialDelaySeconds: 20
+        timeoutSeconds: 5
+        periodSeconds: 3
   volumes:
     - name: data
       emptyDir: {}
