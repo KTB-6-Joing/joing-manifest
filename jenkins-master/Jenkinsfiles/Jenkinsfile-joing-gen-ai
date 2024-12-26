@@ -28,10 +28,10 @@ spec:
     - infinity
     resources:
       limits:
-        memory: 3Gi
-        cpu: 2
+        memory: 1Gi
+        cpu: 1
       requests:
-        memory: 2Gi
+        memory: 1Gi
         cpu: 1
     volumeMounts:
     - name: registry-credentials
@@ -52,12 +52,12 @@ spec:
     }
     
     environment {
-        GITHUB_REPO = 'KTB-6-Joing/joing-ai-server'
+        GITHUB_REPO = 'KTB-6-Joing/joing-genai-server'
         BRANCH = 'develop'
         ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
-        ECR_REGISTRY = 'joing-recai-repo'
+        ECR_REGISTRY = 'joing-genai-repo'
         CONTAINER_PORT = '8000'
-        IMAGE_TAG = "v0.1.${env.BUILD_NUMBER}"
+        IMAGE_TAG = "v0.0.${env.BUILD_NUMBER}"
         
         DISCORD_WEBHOOK = credentials('discord-webhook-url')
     }
@@ -68,7 +68,7 @@ spec:
                 [key: 'ref', value: '$.ref']
             ],
             causeString: 'dev GitHub push',
-            token: 'joing-rec-generic-webhook-token',
+            token: 'joing-generic-webhook-token',
             printContributedVariables: true, // debugging
             printPostContent: true, // debugging
             silentResponse: false, // webhook detail info

@@ -55,7 +55,138 @@ spec:
                 [key: 'ref', value: '$.ref']
             ],
             causeString: 'develop branch github push',
-            token: 'joing-generic-webhook-token',
+            token: 'joing-be-generic-webhook-token',
+            printContributedVariables: true, // debugging
+            printPostContent: true, // debugging
+            silentResponse: false, // webhook detail info
+            regexpFilterText: '$ref',
+            regexpFilterExpression: '^refs/heads/develop$'
+        )
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: "*/${BRANCH}"]],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                        url: "https://github.com/${GITHUB_REPO}.git"
+                    ]]
+                ])
+            }
+        }
+        
+        stage('Build Image') {
+            steps {
+                container('kaniko') {
+                    sh 'mkdir -p /workspace && cp -r * /workspace/'
+                    sh """
+                    executor --dockerfile=Dockerfile \
+                    --context=dir:///workspace \
+                    --destination=${ECR_REPO}/${ECR_REGISTRY}:v0.0.${env.BUILD_NUMBER}
+                    """
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            discordSend description: """
+                빌드 성공!
+                **REPO**: ${env.GITHUB_REPO}
+                **Branch**: ${env.BRANCH ?: 'develop'}
+                **Build Number**: ${env.BUILD_NUMBER}
+                **Image Tag**: v0.0.${env.BUILD_NUMBER}
+                """, 
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult, 
+                title: JOB_NAME,
+                footer: "Jenkins Build Notification",
+                webhookURL: "${DISCORD_WEBHOOK}"
+        }
+        
+        failure {
+            discordSend description: """
+                빌드 실패...
+                **REPO**: ${env.GITHUB_REPO}
+                **Branch**: ${env.BRANCH ?: 'default'}
+                **Build Number**: ${env.BUILD_NUMBER}
+                """, 
+                link: env.BUILD_URL,
+                result: currentBuild.currentResult, 
+                title: JOB_NAME,
+                footer: "Jenkins Build Notification",
+                webhookURL: "${DISCORD_WEBHOOK}"
+        }
+        
+        always {
+            cleanWs()
+        }
+    }
+}
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+metadata:
+  name: build-env
+spec:
+  nodeSelector:
+    jenkins: "true"
+  containers:
+  - name: shell
+    image: ubuntu:latest
+    command:
+    - sleep
+    args:
+    - infinity
+    securityContext:
+      runAsUser: 1000
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command:
+    - sleep
+    args:
+    - infinity
+    volumeMounts:
+    - name: registry-credentials
+      mountPath: /kaniko/.docker
+  volumes:
+    - name: registry-credentials
+      secret:
+        secretName: ecr-secret
+        items: 
+        - key: .dockerconfigjson
+          path: config.json
+'''
+            defaultContainer 'shell'
+            retries 2
+        }
+    }
+    
+    environment {
+        GITHUB_REPO = 'KTB-6-Joing/joing-server'
+        BRANCH = 'develop'
+        ECR_REPO = '054037113048.dkr.ecr.ap-northeast-2.amazonaws.com'
+        ECR_REGISTRY = 'joing-backend-repo'
+        
+        DISCORD_WEBHOOK = credentials('discord-webhook-url')
+    }
+    
+    triggers {
+        GenericTrigger(
+            genericVariables: [
+                [key: 'ref', value: '$.ref']
+            ],
+            causeString: 'develop branch github push',
+            token: 'joing-be-generic-webhook-token',
             printContributedVariables: true, // debugging
             printPostContent: true, // debugging
             silentResponse: false, // webhook detail info

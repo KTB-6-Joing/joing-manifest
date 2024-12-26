@@ -4,4 +4,3 @@ kubeconfig.yaml
 password.txt
 config
 credentials
-argocd-notifications-cm.yaml

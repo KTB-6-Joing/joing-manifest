@@ -25,7 +25,7 @@
   - jenkins agent spot instance 활용
     - stateless
     - 비용 절감
-    - Kaniko 활용으로 DinD, Docker 종속 문제 해결
+    - Kaniko 활용으로 Docker 종속 문제 해결 및 파이프라인 단순화, 리소스 제어
 - [cluster-autoscaler](https://docs.aws.amazon.com/ko_kr/eks/latest/userguide/autoscaling.html)
-  - [Migrating from Cluster Autoscaler](https://karpenter.sh/docs/getting-started/migrating-from-cas/#remove-cas)
+  - [Migrating from Cluster Autoscaler -- Karpenter](https://karpenter.sh/docs/getting-started/migrating-from-cas/#remove-cas)
     - 리소스 과사용으로 보류
